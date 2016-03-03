@@ -16,7 +16,7 @@ How to use
 ----
 If we want to crawl all posts in the `Gossiping` board, use the following command:
 
-    java -jar PTTCrawler.jar Username Password Gossiping
+    java -jar PTTCrawler.jar -u [Username] -p [Password] -b [Gossiping]
 
 which `Username` and `Password` are your PTT account and password to login PTT.
 
