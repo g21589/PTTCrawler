@@ -6,9 +6,10 @@ PTTCrawler is a post crawler in PTT board. PTTCrawler is implemented by Java.
 
 Features
 ----
-* It supports **telnet** (by Apache commons-net) and **SSH** (by JSch) protocol to connect ptt.  
+* It supports **telnet** (by Apache commons-net) and **SSH** (by JSch) protocols to connect to ptt.  
 * It renders the **VT100 terminal** screen to crawl original posts.  
-* Connect Ptt by **UTF-8** character set.
+* Connect Ptt by **UTF-8** character set.  
+* Support *multi-thread* crawl posts.  
 * [API] Also support web version to download the Ptt post.
 
 How to use
@@ -22,11 +23,10 @@ which `Username` and `Password` are your PTT account and password to login PTT.
 Version
 ----
 
-0.9.5
+0.9.6
 
 TODO
 ----
-* Multithread crawl posts.
 * Analysis the post content to structured data.
 
 License

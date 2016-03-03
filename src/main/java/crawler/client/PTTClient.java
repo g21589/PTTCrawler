@@ -1,11 +1,9 @@
 package crawler.client;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.PushbackReader;
 import java.net.SocketException;
 import java.security.KeyManagementException;
@@ -72,7 +70,7 @@ public class PTTClient {
 	private static final String BoardFooter = "文章選讀[\\s\\S]*相關主題[\\s\\S]*找標題/作者[\\s\\S]*進板畫面";
 	private static final String PostFooter = "瀏覽[\\s\\S]*第[\\s\\S]*頁[\\s\\S]*目前顯示[\\s\\S]*第[\\s\\S]*行[\\s\\S]*離開";
 	
-	private static final Pattern ENTRYPATTER_PATTERN = Pattern.compile("[●>][ ]*(?<id>[0-9]+|★[ ]+)[ ](?<status>.)(?<karma>[0-9 X]+|爆)(?<date>../..)[ ](?<author>.*?)([\\s□轉]|R:)+");
+	private static final Pattern ENTRYPATTER_PATTERN = Pattern.compile("[●>][ ]*(?<id>[0-9]+|★[ ]+)[ ](?<status>.)(?<karma>[0-9 X]+|爆)(?<date>../..)[ ](?<author>.*?)([\\s□轉]|R:)+(?<title>.*)");
 	private static final Pattern PROGRESS_PATTERN = Pattern.compile("(?<percent>\\d+)%[^\\d]*(?<from>\\d+)~(?<to>\\d+)");
 
 	// 文章代碼(AID): #1L4GI8SM
@@ -373,6 +371,9 @@ public class PTTClient {
 	 */
 	public Entry moveDownEntry(String boardName) throws Exception {
 		Entry newEntry, oldEntry = getBasicEntryInfo(boardName);
+		if (oldEntry.number.equals("★")) {
+			throw new Exception("Aready at the downest entry.");
+		}
 		send("n");
 		int times = 0;
 		do {
@@ -444,7 +445,8 @@ public class PTTClient {
 				String karma = matcher.group("karma").trim();
 				String date = matcher.group("date").trim();
 				String author = matcher.group("author").trim();
-				return new Entry(id, number, status, karma, date, author, url);
+				String title = matcher.group("title").trim();
+				return new Entry(id, number, status, karma, date, author, title, url);
 			} else {
 				throw new Exception("Can not match entry. " + matchStr);
 			}
@@ -490,6 +492,7 @@ public class PTTClient {
 		String karma = matcher.group("karma").trim();
 		String date = matcher.group("date").trim();
 		String author = matcher.group("author").trim();
+		String title = matcher.group("title").trim();
 		
 		if (!author.equals("-")) {
 			boolean success = false;
@@ -509,7 +512,7 @@ public class PTTClient {
 			} while (!success && count < 5);
 		}
 		
-		Entry entry = new Entry(id, number, status, karma, date, author, url);
+		Entry entry = new Entry(id, number, status, karma, date, author, title, url);
 		return entry;
 	}
 	
@@ -550,12 +553,15 @@ public class PTTClient {
 	/**
 	 * toPostByNum
 	 * @param postNum
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public void toPostByNum(int postNum) throws IOException {
-		send(Integer.toString(postNum) + "\r\n");
-		send("hq");
-		this.refresh();
+	public Entry toEntryByNum(String boardName, int postNum) throws Exception {
+		send(Integer.toString(postNum) + "\r\nhq");
+		this.refresh(200);
+		if (expect("看板《" + boardName + "》[\\s\\S]*" + BoardFooter) != 0) {
+			throw new Exception("Current screen is not \"Board\"");
+		}
+		return getFullEntryInfo(boardName);
 	}
 	
 	/**
@@ -564,10 +570,13 @@ public class PTTClient {
 	 * @return 
 	 * @throws Exception 
 	 */
-	public Entry toPostByID(String boardName, String postID) throws Exception {
+	public Entry toEntryByID(String boardName, String postID) throws Exception {
 		log.info("Go to AID: #"+ postID);
 		send("#" + postID + "\r\nhq");
 		this.refresh(200);
+		if (expect("看板《" + boardName + "》[\\s\\S]*" + BoardFooter) != 0) {
+			throw new Exception("Current screen is not \"Board\"");
+		}
 		return getFullEntryInfo(boardName);
 	}
 	
@@ -618,7 +627,7 @@ public class PTTClient {
 					continue;
 				}
 				
-				log.info(String.format("%4d ~ %4d\t%3d%%", fromLine, toLine, percent));
+				//log.trace(String.format("%4d ~ %4d\t%3d%%", fromLine, toLine, percent));
 				
 				// Append content
 				int overlapLines = 0;
@@ -1029,28 +1038,5 @@ public class PTTClient {
 			Arrays.fill(screen[i], (char) (' '));
 		}
 	}
-	
-	public void crawlAllPostInBoard(String boardname) throws Exception {
-		
-		new File("Result/" + boardname).mkdirs();
-		
-		toBoard(boardname);
-		Entry entry = toLatestPost(boardname);
-		
-		for (;;) {
-			if (!entry.author.equals("-")) {
-				String postContent = downloadCurrentPost();
-				log.info(entry.toString());
-				PrintWriter pw = new PrintWriter("Result/" + boardname + "/#" + entry.id + ".txt");
-				pw.print(postContent);
-				pw.close();
-			}
-			if (entry.number.equals("1")) {
-				break;
-			}
-			entry = moveUpEntry(boardname);
-		}
-		
-	}
-	
+
 }
