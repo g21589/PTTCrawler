@@ -3,6 +3,8 @@ package crawler.main;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,10 +19,12 @@ import crawler.client.PTTClient.Protocol;
 public class Main {
 	
 	private static final Logger log = Logger.getLogger(Main.class);
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	
 	public static String username = null;
 	public static String password = null;
 	public static String boardname = null;
+	public static boolean isMultiThread = false;
 	
 	static {
 		PropertyConfigurator.configure("log4j.properties");
@@ -31,18 +35,22 @@ public class Main {
 	 * @param args 輸入的參數
 	 */
 	private static void parseArgs(String[] args) {
-	
+		
+		isMultiThread = false;
+		
 		for (int i=0; i<args.length; i++) {
 			
 			switch (args[i].charAt(0)) {
 			case '-':
 				if (i+1 < args.length) {
-					if (args[i].equals("-u")) {
+					if (args[i].equals("-u") || args[i].equals("-username")) {
 						username = args[++i];
-					} else if (args[i].equals("-p")) {
+					} else if (args[i].equals("-p") || args[i].equals("-password")) {
 						password = args[++i];
-					} else if (args[i].equals("-b")) {
+					} else if (args[i].equals("-b") || args[i].equals("-board")) {
 						boardname = args[++i];
+					} else if (args[i].equals("-m")) {
+						isMultiThread = true;
 					} else {
 						throw new IllegalArgumentException("Not a valid argument: " + args[i]);
 					}
@@ -74,7 +82,8 @@ public class Main {
 	 */
 	public static void crawlAllPosts() {
 		
-		new File("Result/" + boardname).mkdirs();
+		final String savePath = "Results/" + boardname + "_" + sdf.format(new Date());
+		new File(savePath).mkdirs();
 		PTTClient ptt = new PTTClient();
 		
 		try {
@@ -88,7 +97,7 @@ public class Main {
 				if (!entry.author.equals("-")) {
 					String postContent = ptt.downloadCurrentPost();
 					log.info(entry.toString());
-					PrintWriter pw = new PrintWriter("Result/" + boardname + "/#" + entry.id + ".txt");
+					PrintWriter pw = new PrintWriter(savePath + "/#" + entry.id + ".txt");
 					pw.print(postContent);
 					pw.close();
 				}
@@ -152,6 +161,7 @@ public class Main {
 		}
 		
 		try {
+			executor.shutdown();
 			executor.awaitTermination(1, TimeUnit.DAYS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -167,7 +177,8 @@ public class Main {
 	 */
 	public static void crawlPostsByRange(int fromNum, int toNum) {
 		
-		new File("Result/" + boardname).mkdirs();
+		final String savePath = "Results/" + boardname + "_" + sdf.format(new Date());
+		new File(savePath).mkdirs();
 		PTTClient ptt = new PTTClient();
 		
 		try {
@@ -181,7 +192,7 @@ public class Main {
 				if (!entry.author.equals("-")) {
 					String postContent = ptt.downloadCurrentPost();
 					log.info(entry.toString());
-					PrintWriter pw = new PrintWriter("Result/" + boardname + "/#" + entry.id + ".txt");
+					PrintWriter pw = new PrintWriter(savePath + "/#" + entry.id + ".txt");
 					pw.print(postContent);
 					pw.close();
 				}
@@ -209,7 +220,11 @@ public class Main {
 		
 		parseArgs(args);
 		
-		crawlAllPosts();
+		if (isMultiThread) {
+			crawlAllPostsMultiThread();
+		} else {
+			crawlAllPosts();
+		}
 		
 	}
 

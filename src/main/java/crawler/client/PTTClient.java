@@ -73,7 +73,6 @@ public class PTTClient {
 	private static final Pattern ENTRYPATTER_PATTERN = Pattern.compile("[●>][ ]*(?<id>[0-9]+|★[ ]+)[ ](?<status>.)(?<karma>[0-9 X]+|爆)(?<date>../..)[ ](?<author>.*?)([\\s□轉]|R:)+(?<title>.*)");
 	private static final Pattern PROGRESS_PATTERN = Pattern.compile("(?<percent>\\d+)%[^\\d]*(?<from>\\d+)~(?<to>\\d+)");
 
-	// 文章代碼(AID): #1L4GI8SM
 	private static final Pattern AID_PATTERN = Pattern.compile("文章代碼\\(AID\\):\\s*#(?<aid>........)");
 	private static final Pattern URL_PATTERN = Pattern.compile("文章網址:\\s*(?<url>.*?)[\\s\\│]+");
 	

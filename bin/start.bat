@@ -1,2 +1,2 @@
 @echo off
-java -jar PTTCrawler.jar XXX YYY Gossiping
+java -jar PTTCrawler.jar -u XXX -p YYY -b Gossiping

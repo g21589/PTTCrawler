@@ -1,4 +1,9 @@
 .classpath
 .settings/org.eclipse.jdt.core.prefs
 *.prefs
+*.log
 /target/
+/Result/
+/Results/
+/bin/Result/
+/bin/Results/
