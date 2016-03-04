@@ -49,11 +49,11 @@ public class Main {
 						password = args[++i];
 					} else if (args[i].equals("-b") || args[i].equals("-board")) {
 						boardname = args[++i];
-					} else if (args[i].equals("-m")) {
-						isMultiThread = true;
 					} else {
 						throw new IllegalArgumentException("Not a valid argument: " + args[i]);
 					}
+				} else if (args[i].equals("-m")) {
+					isMultiThread = true;
 				} else {
 					throw new IllegalArgumentException("No config value after " + args[i]);
 				}
